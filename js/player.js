@@ -1,9 +1,9 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 import { camera } from './scene.js';
 
 export const player = new THREE.Mesh(
     new THREE.SphereGeometry(0.5, 16, 16),
-    new THREE.MeshStandardMaterial({ color: 0xffcc00 })
+    new THREE.MeshStandardMaterial({ color: 0x0066cc })
 );
 
 player.position.set(0, 0.5, 0);
@@ -20,10 +20,10 @@ export function movePlayer() {
     let forward = 0;
     let strafe = 0;
 
-    if (keys['w']) forward = 1;
-    if (keys['s']) forward = -1;
-    if (keys['a']) strafe = -1;
-    if (keys['d']) strafe = 1;
+    if (keys['w'] || keys['arrowup']) forward = 1;
+    if (keys['s'] || keys['arrowdown']) forward = -1;
+    if (keys['a'] || keys['arrowleft']) strafe = -1;
+    if (keys['d'] || keys['arrowright']) strafe = 1;
 
     // нормализация диагоналей
     const length = Math.hypot(forward, strafe);
@@ -33,7 +33,7 @@ export function movePlayer() {
     }
 
     if (keys['q']) cameraAngle += 0.02;
-    if (keys['e']) cameraAngle -= 0.02;
+    if (keys['e'] && !nearbyResource) cameraAngle -= 0.02; // Don't rotate when trying to collect
 
     const angle = cameraAngle;
     player.position.x += Math.sin(angle) * forward * speed + Math.cos(angle) * strafe * speed;
@@ -47,9 +47,9 @@ export function movePlayer() {
         player.position.z *= scale;
     }
 
-    // Камера
-    const camDist = 10;
-    const camHeight = 5;
+    // More isometric camera
+    const camDist = 12;
+    const camHeight = 8;
     camera.position.x = player.position.x + Math.sin(angle) * camDist;
     camera.position.z = player.position.z + Math.cos(angle) * camDist;
     camera.position.y = player.position.y + camHeight;
