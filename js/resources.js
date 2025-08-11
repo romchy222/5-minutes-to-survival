@@ -1,10 +1,17 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 import { scene } from './scene.js';
 import { player } from './player.js';
 import { updateInventoryUI } from './ui.js';
+import { gameTimer } from './timer.js';
 
 export const resources = [];
-export const inventory = { wood: 0, stone: 0 };
+export const inventory = { wood: 0, stone: 0, iron: 0 };
+
+let nearbyResource = null;
+const keys = {};
+
+window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
 
 function spawnResource(type, count, islandRadius = 20) {
     for (let i = 0; i < count; i++) {
@@ -14,10 +21,19 @@ function spawnResource(type, count, islandRadius = 20) {
         let z = Math.sin(angle) * distance;
         let y = 0.2;
 
-        let mesh = type === 'wood' ? createTree() : createRock();
+        let mesh = createResourceMesh(type);
         mesh.position.set(x, y, z);
         scene.add(mesh);
         resources.push({ type, mesh });
+    }
+}
+
+function createResourceMesh(type) {
+    switch(type) {
+        case 'wood': return createTree();
+        case 'stone': return createRock();
+        case 'iron': return createIronOre();
+        default: return createRock();
     }
 }
 
@@ -43,21 +59,80 @@ function createRock() {
     return new THREE.Mesh(geo, mat);
 }
 
+function createIronOre() {
+    const geo = new THREE.OctahedronGeometry(0.4);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x666666 });
+    return new THREE.Mesh(geo, mat);
+}
+
 export function initResources() {
     spawnResource('wood', 20);
     spawnResource('stone', 15);
+    spawnResource('iron', 10);
 }
 
 export function checkResourceCollection() {
-    for (let i = resources.length - 1; i >= 0; i--) {
+    nearbyResource = null;
+    
+    for (let i = 0; i < resources.length; i++) {
         const res = resources[i];
         const dist = player.position.distanceTo(res.mesh.position);
 
-        if (dist < 1) {
-            inventory[res.type]++;
-            scene.remove(res.mesh);
-            resources.splice(i, 1);
-            updateInventoryUI(inventory);
+        if (dist < 2) {
+            nearbyResource = res;
+            break;
         }
     }
+    
+    // Show collection prompt
+    updateCollectionPrompt();
+    
+    // Check for 'E' key press to collect
+    if (keys['e'] && nearbyResource) {
+        collectResource(nearbyResource);
+    }
+}
+
+function updateCollectionPrompt() {
+    let promptElement = document.getElementById('collectionPrompt');
+    
+    if (nearbyResource) {
+        if (!promptElement) {
+            promptElement = document.createElement('div');
+            promptElement.id = 'collectionPrompt';
+            promptElement.style.position = 'absolute';
+            promptElement.style.top = '50%';
+            promptElement.style.left = '50%';
+            promptElement.style.transform = 'translate(-50%, -50%)';
+            promptElement.style.padding = '10px 20px';
+            promptElement.style.background = 'rgba(0,0,0,0.7)';
+            promptElement.style.color = 'white';
+            promptElement.style.borderRadius = '5px';
+            promptElement.style.fontFamily = 'Arial, sans-serif';
+            promptElement.style.fontSize = '16px';
+            promptElement.style.zIndex = '100';
+            document.body.appendChild(promptElement);
+        }
+        promptElement.textContent = `Press E to collect ${nearbyResource.type}`;
+        promptElement.style.display = 'block';
+    } else if (promptElement) {
+        promptElement.style.display = 'none';
+    }
+}
+
+function collectResource(resource) {
+    const index = resources.indexOf(resource);
+    if (index === -1) return;
+    
+    inventory[resource.type]++;
+    scene.remove(resource.mesh);
+    resources.splice(index, 1);
+    updateInventoryUI(inventory);
+    
+    // Add score points
+    const points = { wood: 10, stone: 15, iron: 25 };
+    gameTimer.addScore(points[resource.type] || 10);
+    
+    nearbyResource = null;
+    updateCollectionPrompt();
 }
