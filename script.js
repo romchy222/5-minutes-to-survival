@@ -434,7 +434,7 @@ class Game {
   }
   
   collectNearbyResource() {
-    const range = 20;
+    const range = 30;
     
     // Check trees
     for (let i = this.trees.length - 1; i >= 0; i--) {
