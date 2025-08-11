@@ -4,6 +4,8 @@ import { scene } from './scene.js';
 
 const noise2D = createNoise2D();
 
+
+
 // ---------- ОСТРОВ ----------
 export const islandRadius = 20;
 const islandSegments = 128;
@@ -44,6 +46,8 @@ const waterMaterial = new THREE.MeshStandardMaterial({
 const waterMesh = new THREE.Mesh(waterGeometry, waterMaterial);
 waterMesh.position.y = 0;
 scene.add(waterMesh);
+
+
 
 // ---------- АНИМАЦИЯ ВОДЫ ----------
 export function updateIsland(deltaTime) {

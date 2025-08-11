@@ -12,6 +12,9 @@ export const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 20, 20);
 camera.lookAt(0, 0, 0);
 
+
+
+
 export const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
