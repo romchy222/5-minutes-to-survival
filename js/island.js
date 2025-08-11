@@ -1,5 +1,5 @@
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-import { createNoise2D } from 'https://unpkg.com/simplex-noise@4.0.1/dist/esm/index.js';
+import * as THREE from 'https://esm.sh/three@0.160.0';
+import { createNoise2D } from 'https://esm.sh/simplex-noise@4.0.1';
 import { scene } from './scene.js';
 
 const noise2D = createNoise2D();

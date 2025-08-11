@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>5 Minutes to Survival - Demo</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            color: white;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        }
+        
+        #gameArea {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, #2ecc71 20%, #27ae60 40%, #1e90ff 100%);
+        }
+        
+        #player {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #3498db;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+        }
+        
+        .resource {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .tree {
+            background: #27ae60;
+            width: 15px;
+            height: 15px;
+        }
+        
+        .rock {
+            background: #7f8c8d;
+            width: 12px;
+            height: 12px;
+        }
+        
+        .iron {
+            background: #34495e;
+            width: 10px;
+            height: 10px;
+        }
+        
+        .enemy {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #e74c3c;
+            border-radius: 0;
+            transform: rotate(45deg);
+        }
+        
+        .building {
+            position: absolute;
+            border: 2px solid #fff;
+        }
+        
+        .wall {
+            background: #8b4513;
+            width: 20px;
+            height: 30px;
+        }
+        
+        .turret {
+            background: #666;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+        }
+        
+        .trap {
+            background: #654321;
+            width: 20px;
+            height: 5px;
+            border-radius: 10px;
+        }
+        
+        #timer, #inventory, #score {
+            position: absolute;
+            padding: 10px;
+            background: rgba(0,0,0,0.8);
+            border-radius: 5px;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        
+        #timer {
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        #score {
+            top: 60px;
+            left: 10px;
+            font-size: 18px;
+        }
+        
+        #inventory {
+            bottom: 10px;
+            left: 10px;
+            font-size: 16px;
+        }
+        
+        #collectionPrompt {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            z-index: 100;
+            border: 2px solid #4CAF50;
+            display: none;
+        }
+        
+        #buildMenu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            z-index: 1000;
+            display: none;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        #gameOver {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            z-index: 2000;
+        }
+        
+        #instructions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            font-size: 12px;
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="player"></div>
+        <div id="timer">05:00</div>
+        <div id="score">Score: 0</div>
+        <div id="inventory">
+            <div>🌲 Wood: 0</div>
+            <div>🪨 Stone: 0</div>
+            <div>⚙️ Iron: 0</div>
+        </div>
+        <div id="collectionPrompt">Press E to collect</div>
+        <div id="instructions">
+            <strong>Controls:</strong><br>
+            WASD - Move<br>
+            E - Collect resources<br>
+            B - Build menu<br>
+            <br>
+            <strong>Goal:</strong><br>
+            Survive 5 minutes!<br>
+            Collect resources, build defenses,<br>
+            and fight off enemies!
+        </div>
+    </div>
+
+    <div id="buildMenu">
+        <h3>Build Menu</h3>
+        <button id="buildWall">Wall (🌲 10 Wood)</button>
+        <button id="buildTurret">Turret (🌲 5 Wood, 🪨 5 Stone)</button>
+        <button id="buildTrap">Trap (🌲 3 Wood, ⚙️ 2 Iron)</button>
+        <button id="closeBuild" style="background: #f44336;">Close</button>
+    </div>
+
+    <div id="gameOver">
+        <div id="gameOverContent">
+            <h1>Game Over!</h1>
+            <p id="finalScore">Final Score: 0</p>
+            <p id="highScore">High Score: 0</p>
+            <button id="restartBtn">Restart Game</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameTime = 300; // 5 minutes
+        let gameRunning = true;
+        let score = 0;
+        let inventory = { wood: 0, stone: 0, iron: 0 };
+        let player = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let resources = [];
+        let enemies = [];
+        let buildings = [];
+        let keys = {};
+        let nearbyResource = null;
+        let buildMenuOpen = false;
+        let selectedBuilding = null;
+        
+        // Game elements
+        const playerElement = document.getElementById('player');
+        const gameArea = document.getElementById('gameArea');
+        const timerElement = document.getElementById('timer');
+        const scoreElement = document.getElementById('score');
+        const inventoryElement = document.getElementById('inventory');
+        const collectionPrompt = document.getElementById('collectionPrompt');
+        const buildMenu = document.getElementById('buildMenu');
+        const gameOverScreen = document.getElementById('gameOver');
+        
+        // Initialize game
+        function init() {
+            spawnResources();
+            updateUI();
+            gameLoop();
+            
+            // Event listeners
+            document.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+            document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+            
+            document.getElementById('buildWall').addEventListener('click', () => selectBuilding('wall'));
+            document.getElementById('buildTurret').addEventListener('click', () => selectBuilding('turret'));
+            document.getElementById('buildTrap').addEventListener('click', () => selectBuilding('trap'));
+            document.getElementById('closeBuild').addEventListener('click', closeBuildMenu);
+            document.getElementById('restartBtn').addEventListener('click', () => location.reload());
+            
+            gameArea.addEventListener('click', handleClick);
+        }
+        
+        function spawnResources() {
+            // Spawn trees
+            for (let i = 0; i < 20; i++) {
+                spawnResource('tree', Math.random() * window.innerWidth, Math.random() * window.innerHeight);
+            }
+            // Spawn rocks
+            for (let i = 0; i < 15; i++) {
+                spawnResource('rock', Math.random() * window.innerWidth, Math.random() * window.innerHeight);
+            }
+            // Spawn iron
+            for (let i = 0; i < 10; i++) {
+                spawnResource('iron', Math.random() * window.innerWidth, Math.random() * window.innerHeight);
+            }
+        }
+        
+        function spawnResource(type, x, y) {
+            const resource = document.createElement('div');
+            resource.className = `resource ${type}`;
+            resource.style.left = x + 'px';
+            resource.style.top = y + 'px';
+            resource.dataset.type = type;
+            gameArea.appendChild(resource);
+            resources.push({ element: resource, type, x, y });
+        }
+        
+        function spawnEnemy() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            
+            switch(side) {
+                case 0: x = 0; y = Math.random() * window.innerHeight; break;
+                case 1: x = window.innerWidth; y = Math.random() * window.innerHeight; break;
+                case 2: x = Math.random() * window.innerWidth; y = 0; break;
+                case 3: x = Math.random() * window.innerWidth; y = window.innerHeight; break;
+            }
+            
+            const enemy = document.createElement('div');
+            enemy.className = 'enemy';
+            enemy.style.left = x + 'px';
+            enemy.style.top = y + 'px';
+            gameArea.appendChild(enemy);
+            enemies.push({ element: enemy, x, y, health: 100 });
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // Timer
+            gameTime -= 1/60;
+            if (gameTime <= 0) {
+                endGame();
+                return;
+            }
+            
+            // Player movement
+            updatePlayer();
+            
+            // Check resource collection
+            checkResourceCollection();
+            
+            // Handle building
+            handleBuilding();
+            
+            // Update enemies
+            updateEnemies();
+            
+            // Update UI
+            updateUI();
+            
+            // Spawn enemies occasionally
+            if (Math.random() < 0.01) {
+                spawnEnemy();
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function updatePlayer() {
+            const speed = 3;
+            
+            if (keys['w'] || keys['arrowup']) player.y -= speed;
+            if (keys['s'] || keys['arrowdown']) player.y += speed;
+            if (keys['a'] || keys['arrowleft']) player.x -= speed;
+            if (keys['d'] || keys['arrowright']) player.x += speed;
+            
+            // Boundary check
+            player.x = Math.max(10, Math.min(window.innerWidth - 10, player.x));
+            player.y = Math.max(10, Math.min(window.innerHeight - 10, player.y));
+            
+            playerElement.style.left = player.x + 'px';
+            playerElement.style.top = player.y + 'px';
+        }
+        
+        function checkResourceCollection() {
+            nearbyResource = null;
+            
+            for (let resource of resources) {
+                const distance = Math.hypot(player.x - resource.x, player.y - resource.y);
+                if (distance < 30) {
+                    nearbyResource = resource;
+                    break;
+                }
+            }
+            
+            if (nearbyResource) {
+                collectionPrompt.textContent = `Press E to collect ${nearbyResource.type}`;
+                collectionPrompt.style.display = 'block';
+                
+                if (keys['e']) {
+                    collectResource(nearbyResource);
+                }
+            } else {
+                collectionPrompt.style.display = 'none';
+            }
+        }
+        
+        function collectResource(resource) {
+            const type = resource.type === 'tree' ? 'wood' : resource.type === 'rock' ? 'stone' : 'iron';
+            inventory[type]++;
+            
+            const points = { wood: 10, stone: 15, iron: 25 };
+            score += points[type];
+            
+            gameArea.removeChild(resource.element);
+            resources = resources.filter(r => r !== resource);
+            
+            nearbyResource = null;
+            collectionPrompt.style.display = 'none';
+        }
+        
+        function handleBuilding() {
+            if (keys['b'] && !buildMenuOpen) {
+                openBuildMenu();
+            }
+        }
+        
+        function openBuildMenu() {
+            buildMenuOpen = true;
+            buildMenu.style.display = 'block';
+            
+            // Update button states
+            document.getElementById('buildWall').disabled = inventory.wood < 10;
+            document.getElementById('buildTurret').disabled = inventory.wood < 5 || inventory.stone < 5;
+            document.getElementById('buildTrap').disabled = inventory.wood < 3 || inventory.iron < 2;
+        }
+        
+        function closeBuildMenu() {
+            buildMenuOpen = false;
+            buildMenu.style.display = 'none';
+            selectedBuilding = null;
+        }
+        
+        function selectBuilding(type) {
+            selectedBuilding = type;
+            closeBuildMenu();
+        }
+        
+        function handleClick(e) {
+            if (selectedBuilding) {
+                const costs = {
+                    wall: { wood: 10, stone: 0, iron: 0 },
+                    turret: { wood: 5, stone: 5, iron: 0 },
+                    trap: { wood: 3, stone: 0, iron: 2 }
+                };
+                
+                const cost = costs[selectedBuilding];
+                if (inventory.wood >= cost.wood && inventory.stone >= cost.stone && inventory.iron >= cost.iron) {
+                    // Deduct resources
+                    inventory.wood -= cost.wood;
+                    inventory.stone -= cost.stone;
+                    inventory.iron -= cost.iron;
+                    
+                    // Place building
+                    const building = document.createElement('div');
+                    building.className = `building ${selectedBuilding}`;
+                    building.style.left = e.clientX + 'px';
+                    building.style.top = e.clientY + 'px';
+                    gameArea.appendChild(building);
+                    
+                    buildings.push({ element: building, type: selectedBuilding, x: e.clientX, y: e.clientY });
+                    
+                    const points = { wall: 50, turret: 100, trap: 75 };
+                    score += points[selectedBuilding];
+                    
+                    selectedBuilding = null;
+                }
+            }
+        }
+        
+        function updateEnemies() {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                
+                // Move towards player
+                const dx = player.x - enemy.x;
+                const dy = player.y - enemy.y;
+                const distance = Math.hypot(dx, dy);
+                
+                if (distance > 0) {
+                    enemy.x += (dx / distance) * 1;
+                    enemy.y += (dy / distance) * 1;
+                }
+                
+                enemy.element.style.left = enemy.x + 'px';
+                enemy.element.style.top = enemy.y + 'px';
+                
+                // Check collision with player
+                if (distance < 20) {
+                    endGame();
+                    return;
+                }
+                
+                // Check collision with buildings
+                for (let building of buildings) {
+                    const buildingDistance = Math.hypot(enemy.x - building.x, enemy.y - building.y);
+                    if (buildingDistance < 25) {
+                        // Remove building and enemy
+                        gameArea.removeChild(building.element);
+                        buildings = buildings.filter(b => b !== building);
+                        
+                        gameArea.removeChild(enemy.element);
+                        enemies.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        function updateUI() {
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = Math.floor(gameTime % 60);
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            scoreElement.textContent = `Score: ${score}`;
+            
+            inventoryElement.innerHTML = `
+                <div>🌲 Wood: ${inventory.wood}</div>
+                <div>🪨 Stone: ${inventory.stone}</div>
+                <div>⚙️ Iron: ${inventory.iron}</div>
+            `;
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            
+            const highScore = localStorage.getItem('survivalHighScore') || 0;
+            if (score > highScore) {
+                localStorage.setItem('survivalHighScore', score);
+            }
+            
+            document.getElementById('finalScore').textContent = `Final Score: ${score}`;
+            document.getElementById('highScore').textContent = `High Score: ${Math.max(score, highScore)}`;
+            
+            gameOverScreen.style.display = 'flex';
+        }
+        
+        // Start the game
+        init();
+    </script>
+</body>
+</html>
