@@ -10,6 +10,11 @@ const noise2D = createNoise2D();
 export const islandRadius = 20;
 const islandSegments = 128;
 
+//------------TORNADO------------
+
+
+
+
 const geometry = new THREE.PlaneGeometry(islandRadius * 2, islandRadius * 2, islandSegments, islandSegments);
 geometry.rotateX(-Math.PI / 2);
 
