@@ -3,19 +3,43 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>Three.js app</title>
+    <title>5 Minutes to Survival 3D</title>
     <link href="style.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
-    <!-- Including the three.js library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/104/three.min.js"></script>
-    <script src="script.js"></script>
+    <!-- Game UI -->
+    <div id="ui">
+      <div id="timer">Time: 300s</div>
+      <div id="resources">
+        <div>Wood: <span id="wood">0</span></div>
+        <div>Stone: <span id="stone">0</span></div>
+        <div>Iron: <span id="iron">0</span></div>
+      </div>
+      <div id="score">Score: <span id="scoreValue">0</span></div>
+      <div id="controls">
+        <p>WASD/Arrows: Move | E: Collect | B: Build Menu</p>
+      </div>
+      <div id="buildMenu" style="display: none;">
+        <h3>Build</h3>
+        <button id="buildWall">Wall (10 Wood)</button>
+        <button id="buildTurret">Turret (5 Wood, 5 Stone)</button>
+        <button id="buildTrap">Trap (3 Wood, 2 Iron)</button>
+        <button id="closeBuild">Close</button>
+      </div>
+    </div>
+    
+    <!-- Game canvas will be added here -->
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- Game Over Screen -->
+    <div id="gameOver" style="display: none;">
+      <h2>Game Over!</h2>
+      <p>Final Score: <span id="finalScore">0</span></p>
+      <button id="restartBtn">Play Again</button>
+    </div>
 
-    <!--
-    This script places a badge on your repl's full-browser view back to your repl's cover  
-    page. Try various colors for the theme: dark, light, red, orange, yellow, lime, green,
-    teal, blue, blurple, magenta, pink!
-    -->
-    <script src="https://replit.com/public/js/replit-badge.js" theme="blue" defer></script> 
+    <!-- Local dependencies -->
+    <script src="libs/simplex-noise.js"></script>
+    <script src="script.js"></script>
   </body>
 </html>
